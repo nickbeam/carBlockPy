@@ -1,0 +1,14 @@
+# CarBlockPy2 - Python Dependencies
+
+# Telegram Bot Framework
+python-telegram-bot==20.7
+
+# Database
+psycopg2-binary==2.9.9
+
+# Configuration
+pyyaml==6.0.1
+python-dotenv==1.0.0
+
+# Type Hints (optional, for development)
+typing-extensions==4.9.0

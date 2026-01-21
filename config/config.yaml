@@ -1,0 +1,26 @@
+# CarBlockPy2 Configuration File
+
+# Database Configuration
+database:
+  host: localhost
+  port: 5432
+  name: carblockdb
+  user: carblock_user
+  password: your_password_here
+
+# Telegram Bot Configuration
+telegram:
+  bot_token: your_telegram_bot_token_here
+
+# Message Template
+# Use {licence_plate} as placeholder for the license plate number
+message_template: "Hello! Someone is trying to contact you regarding your vehicle with license plate {licence_plate}."
+
+# Rate Limiting Configuration
+rate_limiting:
+  max_messages_per_hour: 3
+
+# Application Settings
+app:
+  debug: false
+  timezone: Europe/Moscow

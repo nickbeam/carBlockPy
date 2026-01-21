@@ -1,0 +1,74 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: carblockpy2-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-carblockdb}
+      POSTGRES_USER: ${DB_USER:-carblock_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-your_password_here}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-carblock_user} -d ${DB_NAME:-carblockdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - carblock_network
+
+  # Telegram Bot
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: carblockpy2-bot
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Database configuration
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-carblockdb}
+      DB_USER: ${DB_USER:-carblock_user}
+      DB_PASSWORD: ${DB_PASSWORD:-your_password_here}
+      
+      # Telegram Bot configuration
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-your_telegram_bot_token_here}
+      
+      # Rate limiting
+      MAX_MESSAGES_PER_HOUR: ${MAX_MESSAGES_PER_HOUR:-3}
+      
+      # Application settings
+      DEBUG: ${DEBUG:-true}
+      TIMEZONE: ${TIMEZONE:-Europe/Moscow}
+      
+      # Docker-specific
+      SKIP_DB_INIT: ${SKIP_DB_INIT:-false}
+    volumes:
+      # Mount source code for hot-reload in development
+      - ./src:/app/src
+      - ./config:/app/config
+      - ./scripts:/app/scripts
+      - ./main.py:/app/main.py
+    networks:
+      - carblock_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  carblock_network:
+    driver: bridge

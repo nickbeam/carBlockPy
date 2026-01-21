@@ -1,0 +1,93 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: carblockpy2-db-prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-carblockdb}
+      POSTGRES_USER: ${DB_USER:-carblock_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    # Do not expose ports in production - use internal network only
+    # ports:
+    #   - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - carblock_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Telegram Bot
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: carblockpy2-bot:latest
+    container_name: carblockpy2-bot-prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Database configuration
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      
+      # Telegram Bot configuration
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      
+      # Rate limiting
+      MAX_MESSAGES_PER_HOUR: ${MAX_MESSAGES_PER_HOUR:-3}
+      
+      # Application settings
+      DEBUG: "false"
+      TIMEZONE: ${TIMEZONE:-Europe/Moscow}
+      
+      # Docker-specific
+      SKIP_DB_INIT: "false"
+    # No volume mounts in production - use the built image
+    # volumes:
+    #   - ./src:/app/src
+    networks:
+      - carblock_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+volumes:
+  postgres_data_prod:
+    driver: local
+
+networks:
+  carblock_network:
+    driver: bridge
+    internal: false
