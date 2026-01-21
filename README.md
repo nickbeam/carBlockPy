@@ -2,6 +2,9 @@
 
 A Python Telegram bot application for managing license plates and sending messages between vehicle owners.
 
+## Bot example
+[@CarBlockBotPy](https://t.me/hrenovbot)
+
 ## Features
 
 - ✅ User registration via Telegram
