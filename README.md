@@ -495,7 +495,7 @@ The `license_plates` table has a trigger that automatically updates the `updated
 
 ## License
 
-This project is provided as-is for educational purposes.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Contributing
 
